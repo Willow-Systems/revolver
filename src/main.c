@@ -25,6 +25,7 @@ static Window *window;
 static Layer *clock_layer;
 
 static GFont digital_font;
+static GFont date_font;
 static ClockState s_clock_state;
 
 void watch_model_handle_center_change(const CenterState *state) {
@@ -97,15 +98,23 @@ static void draw_clock(Layer *layer, GContext *ctx) {
   draw_center(ctx, &layer_bounds, current_state);
   draw_dots(ctx, &center_point, current_state);
   static char s_time_string[10];
+  static char s_date_string[10];
   strftime(s_time_string, sizeof(s_time_string), "%I:%M", &s_clock_state.current_time);
+  strftime(s_date_string, sizeof(s_date_string), "%d/%m", &s_clock_state.current_time);
   GSize text_size = graphics_text_layout_get_content_size(s_time_string, digital_font, layer_bounds,
                                                           GTextOverflowModeFill,
                                                           GTextAlignmentCenter);
   // TODO: Configurable?
   graphics_context_set_text_color(ctx, GColorBlack);
   GRect text_box = GRect(90 - text_size.w / 2, 90 - text_size.h * 2 / 3, text_size.w, text_size.h);
-  graphics_draw_text(ctx, s_time_string, digital_font, text_box, GTextOverflowModeFill,
-                     GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, s_time_string, digital_font, text_box, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+
+  GSize date_text_size = graphics_text_layout_get_content_size(s_date_string, date_font, layer_bounds,
+                                                          GTextOverflowModeFill,
+                                                          GTextAlignmentCenter);
+  GRect text_box_two = GRect(90 - date_text_size.w / 2, 113 - date_text_size.h * 2 / 3, date_text_size.w, date_text_size.h);
+  graphics_draw_text(ctx, s_date_string, date_font, text_box_two, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+
 }
 
 static void prv_app_did_focus(bool did_focus) {
@@ -131,6 +140,7 @@ static void window_load(Window *window) {
   layer_add_child(window_layer, clock_layer);
   //tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
   digital_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
+  date_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
 }
 
 static void window_unload(Window *window) {
